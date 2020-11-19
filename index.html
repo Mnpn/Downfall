@@ -9,10 +9,23 @@
 	<script src="weather.js"></script>
 </head>
 <body>
-	<h1>Weather test page</h1>
-	<button onclick="getPos()">Get my position</button>
-	<p id="long">Long: ?</p>
-	<p id="lat">Lat: ?</p>
+	<h1 style="text-align: center;">Weather</h1>
+
+	<section class="wcontent">
+		<div class="cards">
+			<div class="card">
+				<button onclick="getPos()">Get my position</button>
+			</div>
+			<div class="card">
+				<h1 id="statustext"></h1>
+			</div>
+			<div class="card">
+				<p id="long">Long: ?</p>
+				<p id="lat">Lat: ?</p>
+			</div>
+		</div>
+	</section>
+
 	<div id="data"></div>
 </body>
 </html>

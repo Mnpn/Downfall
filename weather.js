@@ -5,8 +5,8 @@ let forecast = null;
 var locSuccess = function(position) {
 	let longitude = roundPos(position.coords.longitude);
 	let latitude = roundPos(position.coords.latitude);
-	$("#long").innerHTML = "Long: " + longitude;
-	$("#lat").innerHTML = "Lat: " + latitude;
+	$("#long").html("Long: " + longitude);
+	$("#lat").html("Lat: " + latitude);
 	getData(longitude, latitude);
 };
 
@@ -35,7 +35,7 @@ function rainStatus(statusInt) { // TODO: Request a time, check time, return val
 		case 4: return "Drizzle";
 		case 5: return "Freezing rain";
 		case 6: return "Freezing drizzle";
-		default: "Unknown"
+		default: "Unknown";
 	}
 }
 /*
@@ -89,19 +89,40 @@ function getData(long, lat) {
 	endpoint = endpoint.replace("{lat}", lat).replace("{lon}", long);
 	$.getJSON(endpoint).done(function (data) {		
 		forecast = JSON.parse(JSON.stringify(data));
-		console.log(forecast);
 		displayData();
 		//document.getElementById("data").innerHTML = "Upcoming forecast: " + upcoming; 
 	});
 }
 
 function displayData() {
+	foundFirst = false;
+	hoursRemaining = 0;
 	for(day in forecast.timeSeries) {
-		upcoming = "" + day + ": " + forecast.timeSeries[day].parameters[1].values[0] + " degrees, "
-			+ rainStatus(forecast.timeSeries[day].parameters[15].values[0]) + ", "
-			+ Wsymb2.get(forecast.timeSeries[day].parameters[18].values[0]);
-		tag = document.createElement("p");
-		tag.appendChild(document.createTextNode(upcoming));
-		$("#data")[0].appendChild(tag);
+		time = forecast.timeSeries[day];
+		// After the 5th entry, the location of pcat in the array moves. We have to check by names, sigh.
+		for(i=0; i<time.parameters.length; i++) {
+			if(forecast.timeSeries[day].parameters[i].name == "pcat") {
+				rainCond = rainStatus(time.parameters[i].values[0]);
+				upcoming = "" + day + ": " + time.parameters[1].values[0] + " degrees, "
+					+ rainCond + ", "
+					+ Wsymb2.get(time.parameters[18].values[0]); //wsymb always 18
+				tag = document.createElement("p");
+				tag.appendChild(document.createTextNode(upcoming));
+
+				if(rainCond == "Rain" && !foundFirst) {
+					hoursRemaining = day;
+					foundFirst = true;
+				}
+				$("#data")[0].appendChild(tag);
+
+			}
+		}
 	}
+	if(foundFirst) {
+		if(hoursRemaining == 0) {
+			$("#statustext").html("It's raining, so true dood.");
+		} else {
+			$("#statustext").html("It's going to rain next in " + hoursRemaining + " hours.<br>That's at " + forecast.timeSeries[hoursRemaining].validTime + ".");
+		}
+	} else { $("#statustext").html("Sunny days ahead."); } // no rain found
 }
