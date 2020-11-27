@@ -1,8 +1,13 @@
 let endpoint = "https://opendata-download-metfcst.smhi.se/api/category/pmp3g/version/2/geotype/point/lon/{lon}/lat/{lat}/data.json";
 let forecast = null;
+let nextRain = "";
+let nextSnow = "";
 
 // location code from google web fundamentals
 var locSuccess = function(position) {
+	$("#topLabel").html("I want to see...");
+	$("#posButton").css("display", "none");
+	$(".furtheroptions").css("display", "block");
 	let longitude = roundPos(position.coords.longitude);
 	let latitude = roundPos(position.coords.latitude);
 	$("#long").html("Long: " + longitude);
@@ -15,12 +20,12 @@ var locError = function(error) {
 		case error.TIMEOUT:
 			break;
 		default:
-			$("#data").innerHTML = "Location access denied";
+			$("#topLabel").html("Location access denied");
 			break;
 	}
 };
 
-function getPos() { navigator.geolocation.getCurrentPosition(locSuccess, locError); }
+function getPos() { $("#topLabel").css("display", "block"); navigator.geolocation.getCurrentPosition(locSuccess, locError); }
 
 // SMHI's API supports up to 6 decimal point values, let's try to keep it below that.
 // This is not the world's most accurate way to round, but it is sufficient here.
@@ -95,8 +100,10 @@ function getData(long, lat) {
 }
 
 function displayData() {
-	foundFirst = false;
-	hoursRemaining = 0;
+	foundFirstRain = false;
+	foundFirstSnow = false;
+	hoursRemainingRain = 0;
+	hoursRemainingSnow = 0;
 	for(day in forecast.timeSeries) {
 		time = forecast.timeSeries[day];
 		// After the 5th entry, the location of pcat in the array moves. We have to check by names, sigh.
@@ -105,24 +112,46 @@ function displayData() {
 				rainCond = rainStatus(time.parameters[i].values[0]);
 				upcoming = "" + day + ": " + time.parameters[1].values[0] + " degrees, "
 					+ rainCond + ", "
-					+ Wsymb2.get(time.parameters[18].values[0]); //wsymb always 18
+					+ Wsymb2.get(time.parameters[18].values[0]); // wsymb always 18
 				tag = document.createElement("p");
 				tag.appendChild(document.createTextNode(upcoming));
 
-				if(rainCond == "Rain" && !foundFirst) {
-					hoursRemaining = day;
-					foundFirst = true;
+				if(rainCond == "Rain" && !foundFirstRain) {
+					hoursRemainingRain = day;
+					foundFirstRain = true;
+				}
+				if(rainCond == "Snow" && !foundFirstSnow) {
+					hoursRemainingRain = day;
+					foundFirstRain = true;
 				}
 				$("#data")[0].appendChild(tag);
 
 			}
 		}
 	}
-	if(foundFirst) {
-		if(hoursRemaining == 0) {
-			$("#statustext").html("It's raining, so true dood.");
-		} else {
-			$("#statustext").html("It's going to rain next in " + hoursRemaining + " hours.<br>That's at " + forecast.timeSeries[hoursRemaining].validTime + ".");
+	if(foundFirstRain) {
+		if(hoursRemainingRain == 0) { nextRain = "It's raining, so true dood."; } else {
+			nextRain = "It's going to rain next in " + hoursRemainingRain + " hours.<br>That's at " + forecast.timeSeries[hoursRemainingRain].validTime + ".";
 		}
-	} else { $("#statustext").html("Sunny days ahead."); } // no rain found
+	} else { nextRain = "Sunny days ahead."; } // no rain found
+
+	if(foundFirstSnow) {
+		if(hoursRemainingSnow == 0) { nextSnow = "It's snowing right now!"; } else {
+			nextSnow = "You'll see some snow in " + hoursRemainingSnow + " hours.<br>That's at " + forecast.timeSeries[hoursRemainingSnow].validTime + ".";
+		}
+	} else { nextSnow = "No snow on the forecast!"; } // no snow found
+
+	listUpdate();
+}
+
+function listUpdate() {
+	if($("#snow").is(':checked')) {
+		$("#statustext").html(nextSnow);
+		return
+	} else if($("#rain").is(':checked')) {
+		$("#statustext").html(nextRain);
+		return
+	} else {
+		$("#statustext").html("monkaHmm");
+	}
 }
