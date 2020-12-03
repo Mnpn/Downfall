@@ -3,36 +3,33 @@
 	<head>
 		<meta charset="UTF-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<title>Weather</title>
+		<title>Downfall</title>
 		<link rel="stylesheet" href="style.css">
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 		<script src="weather.js"></script>
 	</head>
 	<body>
-		<h1 style="text-align: center;">Weather</h1>
-		<noscript><h1 style="color: red">This website requires JavaScript.</h1></noscript>
-
-		<section class="wcontent">
+		<section>
+			<h1>Downfall</h1>
+			<noscript><h1 style="color: red">This website requires JavaScript.</h1></noscript>
 			<div class="cards">
 				<div class="card">
-					<div class="option">
-					<button onclick="getPos()" id="posButton">Get my position</button>
-					<h1 id="topLabel" style="display: none">Awaiting response..</h1>
-						<div class="furtheroptions" onclick="listUpdate()">
-							<input type="radio" name="cond" id="rain" checked="true"><label for="rain">Rain</label><br>
-							<input type="radio" name="cond" id="snow"><label for="snow">Snow</label><br>
-							<input type="radio" name="cond" id="sun"><label for="sun">Sun</label>
-						</div>
+					<button onclick="getPos()" id="posButton">Get device location</button>
+					<h2 id="topLabel" style="display: none">Awaiting response..</h2>
+					<div class="furtheroptions" onclick="listUpdate()">
+						<input type="radio" name="cond" id="rain" checked="true"><label for="rain">Rain</label><br>
+						<input type="radio" name="cond" id="snow"><label for="snow">Snow</label><br>
+						<input type="radio" name="cond" id="sun"><label for="sun">Sun</label>
 					</div>
 				</div>
-				<div class="card">
-					<h1 id="statustext"></h1>
+				<div class="card" id="infocard">
+					<h2 id="statustext"></h2>
+					<p id="loc"></p>
 				</div>
 			</div>
 		</section>
-
-		<p id="long">Long: ?</p>
-		<p id="lat">Lat: ?</p>
-		<div id="data"></div>
+		<footer>
+			<p>Martin Persson 2020 | <a href="https://github.com/Mnpn03">GitHub</a></p>
+		</footer>
 	</body>
 </html>

@@ -1,60 +1,118 @@
 body {
-	background-color: rgb(79, 171, 243);
+	background-color: #4fabf3;
+	background: linear-gradient(180deg, #4fabf3 0%, #2170ad 100%);
+	height: 100vh;
 	color: #fff;
 	font-family: Ubuntu, sans-serif;
+	text-align: center;
+	overflow: hidden; /* no scrolling/bobbing */
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	margin: 0;
 }
 
 button {
-	border: 3px solid #fff;
-	background-color: #ffaf00;
-	transition: .3s background-color, .2s color;
-	padding: 10px;
-	font-size: 16px;
-	border-radius: 12px;
+	background-color: rgba(255, 255, 255, 0.2);
 }
 
-button:hover {
-	background-color: #000;
-	color: #fff;
+h1 {
+	font-size: 32px;
+	padding: 0;
+}
+
+h2 {
+	font-size: 24px;
+}
+
+footer {
+	height: 52px;
+	bottom: 0;
+	left: 0;
+	background-color: #161616;
+	line-height: 52px;
+	user-select: none;
+	text-align: left;
+}
+
+footer p {
+	color: #a0a0a0;
+	margin: 0;
+	padding-left: 16px;
+}
+
+a {
+	color: lightblue;
+	text-decoration: none;
+}
+
+a:hover {
+	color: white;
 }
 
 .cards {
 	display: flex;
-	justify-content: space-around;
+	justify-content: center;
 	align-items: center;
 	align-content: center;
 	flex-wrap: wrap;
 }
 
 .card {
-	min-width: 400px;
-	min-height: 300px;
-	background-color: #44a832;
+	min-width: 250px;
+	min-height: 250px;
+	width: 400px;
+	height: 300px;
+	background-color: rgba(255, 255, 255, 0.2);
+	border-radius: 12px;
 	margin: 12px;
 	justify-content: center;
 	align-items: center;
+	text-align: center;
+	display: flex;
+	flex-direction: column;
+}
+
+#infocard {
+	display: none;
 }
 
 .furtheroptions {
 	display: none;
+	align-items: center;
+	flex-direction: column;
 }
 
 ul {
-    list-style: none;
+	list-style: none;
 }
 
 input {
-    visibility:hidden;
-    margin: 12px;
-    text-align: center;
+	display: none;
+	margin: 0;
 }
 
-label {
-	padding: 6px 12px 6px 12px;
+label, button {
+	display: inline-block;
+	width: 200px;
+	text-align: center;
+	padding: 10px 12px 10px 12px;
+	margin: 6px;
 	border-radius: 5px;
-    cursor: pointer;
+	cursor: pointer;
+	border: solid rgba(255, 255, 255, 0.1);
+	border-width: 3px 0;
+	transition: background .1s ease-in-out, color .3s, border .4s;
+	font-size: 18px;
+}
+
+label:hover, button:hover {
+	background: rgba(255, 255, 255, 0.1);
+	border: 3px solid white;
+	border-width: 3px 0;
 }
 
 input:checked + label {
-    background: orange;
+	background: rgba(255, 255, 255, 0.6);
+	color: #000;
 }

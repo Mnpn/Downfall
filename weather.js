@@ -1,17 +1,16 @@
 let endpoint = "https://opendata-download-metfcst.smhi.se/api/category/pmp3g/version/2/geotype/point/lon/{lon}/lat/{lat}/data.json";
 let forecast = null;
-let nextRain = "";
-let nextSnow = "";
+let nextRain, nextSnow = "Weather data not yet fetched.";
 
 // location code from google web fundamentals
 var locSuccess = function(position) {
 	$("#topLabel").html("I want to see...");
 	$("#posButton").css("display", "none");
 	$(".furtheroptions").css("display", "block");
+	$("#infocard").css("display", "flex");
 	let longitude = roundPos(position.coords.longitude);
 	let latitude = roundPos(position.coords.latitude);
-	$("#long").html("Long: " + longitude);
-	$("#lat").html("Lat: " + latitude);
+	$("#loc").html("Your location: " + latitude + ", " + longitude);
 	getData(longitude, latitude);
 };
 
@@ -95,14 +94,13 @@ function getData(long, lat) {
 	$.getJSON(endpoint).done(function (data) {		
 		forecast = JSON.parse(JSON.stringify(data));
 		displayData();
-		//document.getElementById("data").innerHTML = "Upcoming forecast: " + upcoming; 
 	});
 }
 
 function displayData() {
 	foundFirstRain = false;
 	foundFirstSnow = false;
-	hoursRemainingRain = 0;
+	hoursRemainingRain = 0; // TODO: this doesn't really work. all updates are not hourly.
 	hoursRemainingSnow = 0;
 	for(day in forecast.timeSeries) {
 		time = forecast.timeSeries[day];
@@ -124,20 +122,18 @@ function displayData() {
 					hoursRemainingRain = day;
 					foundFirstRain = true;
 				}
-				$("#data")[0].appendChild(tag);
-
 			}
 		}
 	}
 	if(foundFirstRain) {
 		if(hoursRemainingRain == 0) { nextRain = "It's raining, so true dood."; } else {
-			nextRain = "It's going to rain next in " + hoursRemainingRain + " hours.<br>That's at " + forecast.timeSeries[hoursRemainingRain].validTime + ".";
+			nextRain = "It's going to rain next in " + hoursRemainingRain + " hours.<br>That's on " + formatDate(forecast.timeSeries[hoursRemainingRain].validTime) + ".";
 		}
 	} else { nextRain = "Sunny days ahead."; } // no rain found
 
 	if(foundFirstSnow) {
 		if(hoursRemainingSnow == 0) { nextSnow = "It's snowing right now!"; } else {
-			nextSnow = "You'll see some snow in " + hoursRemainingSnow + " hours.<br>That's at " + forecast.timeSeries[hoursRemainingSnow].validTime + ".";
+			nextSnow = "You'll see some snow in " + hoursRemainingSnow + " hours.<br>That's on " + formatDate(forecast.timeSeries[hoursRemainingSnow].validTime) + ".";
 		}
 	} else { nextSnow = "No snow on the forecast!"; } // no snow found
 
@@ -154,4 +150,9 @@ function listUpdate() {
 	} else {
 		$("#statustext").html("monkaHmm");
 	}
+}
+
+function formatDate(date) {
+	dateString = date.slice(0, -10) + " at " + date.slice(11, -4);
+	return dateString;
 }
