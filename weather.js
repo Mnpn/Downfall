@@ -30,32 +30,39 @@ function getPos() { $("#topLabel").css("display", "block"); navigator.geolocatio
 // This is not the world's most accurate way to round, but it is sufficient here.
 function roundPos(pos) { return Math.round((pos + Number.EPSILON) * 10000) / 10000 }
 
-function rainStatus(statusInt) { // TODO: Request a time, check time, return value.
+function percipStatus(statusInt) { // Format SMHI's options as text
 	switch(statusInt) {
-		case 0: return "No percipitation";
-		case 1: return "Snow";
-		case 2: return "Snow & Rain";
-		case 3: return "Rain";
-		case 4: return "Drizzle";
-		case 5: return "Freezing rain";
-		case 6: return "Freezing drizzle";
+		case 0: return "be no percipitation";
+		case 1: return "snow";
+		case 2: return "snow & rain";
+		case 3: return "rain";
+		case 4: return "drizzle";
+		case 5: return "be freezing rain";
+		case 6: return "be freezing drizzle";
 		default: "Unknown";
 	}
 }
-/*
-function Wsymb2(timeSeries) {
-	statusInt = timeSeries.parameters[15].values[0]; // type (wsymb), value (int)
+
+function rainStatus(statusInt) {
 	switch(statusInt) {
-		case 0: return "";
-		case 1: return "";
-		case 2: return "";
-		case 3: return "";
-		case 4: return "";
-		case 5: return "";
-		case 6: return "";
-		default: "Unknown"
+		case 2:
+		case 3:
+		case 4:
+		case 5:
+		case 6:
+			return true;
+		default: false;
 	}
-}*/
+}
+
+function snowStatus(statusInt) {
+	switch(statusInt) {
+		case 1:
+		case 2:
+			return true;
+		default: false;
+	}
+}
 
 // unsure if I want to use this over a switch in a func
 let Wsymb2 = new Map([ // TODO: definitions.js
@@ -97,45 +104,52 @@ function getData(long, lat) {
 	});
 }
 
-function displayData() {
-	foundFirstRain = false;
-	foundFirstSnow = false;
-	hoursRemainingRain = 0; // TODO: this doesn't really work. all updates are not hourly.
-	hoursRemainingSnow = 0;
+function displayData() { // TODO: better, non-repetitive code
+	let foundFirstRain, foundFirstSnow, foundFirstFog = false;
+	let hoursRemainingRain, hoursRemainingSnow, hoursRemainingFog = 0; // TODO: this doesn't really work. all updates are not hourly.
+	let percipCond = -1; // this can never occur with SMHI data
 	for(day in forecast.timeSeries) {
 		time = forecast.timeSeries[day];
 		// After the 5th entry, the location of pcat in the array moves. We have to check by names, sigh.
 		for(i=0; i<time.parameters.length; i++) {
 			if(forecast.timeSeries[day].parameters[i].name == "pcat") {
-				rainCond = rainStatus(time.parameters[i].values[0]);
-				upcoming = "" + day + ": " + time.parameters[1].values[0] + " degrees, "
-					+ rainCond + ", "
-					+ Wsymb2.get(time.parameters[18].values[0]); // wsymb always 18
-				tag = document.createElement("p");
-				tag.appendChild(document.createTextNode(upcoming));
+				percipCond = time.parameters[i].values[0];
 
-				if(rainCond == "Rain" && !foundFirstRain) {
+				if(rainStatus(percipCond) && !foundFirstRain) {
 					hoursRemainingRain = day;
 					foundFirstRain = true;
 				}
-				if(rainCond == "Snow" && !foundFirstSnow) {
-					hoursRemainingRain = day;
-					foundFirstRain = true;
+				if(snowStatus(percipCond) && !foundFirstSnow) {
+					hoursRemainingSnow = day;
+					foundFirstSnow = true;
+				}
+				if(time.parameters[18].values[0] = 6 && !foundFirstFog) { // wsymb always 18, 6 = fog
+					hoursRemainingFog = day;
+					foundFirstFog = true;
 				}
 			}
 		}
 	}
 	if(foundFirstRain) {
-		if(hoursRemainingRain == 0) { nextRain = "It's raining, so true dood."; } else {
-			nextRain = "It's going to rain next in " + hoursRemainingRain + " hours.<br>That's on " + formatDate(forecast.timeSeries[hoursRemainingRain].validTime) + ".";
+		if(hoursRemainingRain == 0) { nextRain = "It's raining, bring an umbrella!"; } else {
+			nextRain = "It's going to " + percipStatus(percipCond) + " next in " + hoursRemainingRain + " hours.";
+			nextRain += "<br>That's on " + formatDate(forecast.timeSeries[hoursRemainingRain].validTime) + ".";
 		}
 	} else { nextRain = "Sunny days ahead."; } // no rain found
 
 	if(foundFirstSnow) {
 		if(hoursRemainingSnow == 0) { nextSnow = "It's snowing right now!"; } else {
-			nextSnow = "You'll see some snow in " + hoursRemainingSnow + " hours.<br>That's on " + formatDate(forecast.timeSeries[hoursRemainingSnow].validTime) + ".";
+			nextSnow = "You'll see some snow in " + hoursRemainingSnow + " hours.";
+			nextSnow += "<br>That's on " + formatDate(forecast.timeSeries[hoursRemainingSnow].validTime) + ".";
 		}
 	} else { nextSnow = "No snow on the forecast!"; } // no snow found
+
+	if(foundFirstFog) {
+		if(hoursRemainingFog == 0) { nextFog = "It's foggy, be careful!"; } else {
+			nextFog = "It's going to be foggy next in " + hoursRemainingFog + " hours.";
+			nextFog += "<br>That's on " + formatDate(forecast.timeSeries[hoursRemainingFog].validTime) + ".";
+		}
+	} else { nextFog = "Clear days ahead."; } // no fog found
 
 	listUpdate();
 }
@@ -147,8 +161,11 @@ function listUpdate() {
 	} else if($("#rain").is(':checked')) {
 		$("#statustext").html(nextRain);
 		return
+	} else if($("#fog").is(":checked")) {
+		$("#statustext").html(nextFog);
+		return
 	} else {
-		$("#statustext").html("monkaHmm");
+		$("#statustext").html("Invalid option selected.");
 	}
 }
 
