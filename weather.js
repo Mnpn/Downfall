@@ -1,6 +1,6 @@
 let endpoint = "https://opendata-download-metfcst.smhi.se/api/category/pmp3g/version/2/geotype/point/lon/{lon}/lat/{lat}/data.json";
 let forecast = null;
-let nextRain, nextSnow = "Weather data not yet fetched.";
+let nextRain, nextSnow, nextFog = "Weather data not yet fetched.";
 
 // location code from google web fundamentals
 var locSuccess = function(position) {
@@ -24,7 +24,10 @@ var locError = function(error) {
 	}
 };
 
-function getPos() { $("#topLabel").css("display", "block"); navigator.geolocation.getCurrentPosition(locSuccess, locError); }
+function getPos() {
+	$("#topLabel").css("display", "block");
+	navigator.geolocation.getCurrentPosition(locSuccess, locError);
+}
 
 // SMHI's API supports up to 6 decimal point values, let's try to keep it below that.
 // This is not the world's most accurate way to round, but it is sufficient here.
@@ -66,33 +69,33 @@ function snowStatus(statusInt) {
 
 // unsure if I want to use this over a switch in a func
 let Wsymb2 = new Map([ // TODO: definitions.js
-		[0, "Clear sky"],
-		[1, "Nearly clear sky"],
-		[2, "Variable cloudiness"],
-		[3, "Halfclear sky"],
-		[4, "Cloudy sky"],
-		[5, "Overcast"],
-		[6, "Fog"],
-		[7, "Light rain showers"],
-		[8, "Moderate rain showers"],
-		[9, "Heavy rain showers"],
-		[10, "Thunderstorm"],
-		[11, "Light sleet showers"],
-		[12, "Moderate sleet showers"],
-		[13, "Heavy sleet showers"],
-		[14, "Light snow showers"],
-		[15, "Moderate snow showers"],
-		[16, "Heavy snow showers"],
-		[17, "Light rain"],
-		[18, "Moderate rain"],
-		[19, "Heavy rain"],
-		[20, "Thunder"],
-		[21, "Light sleet"],
-		[22, "Moderate sleet"],
-		[23, "Heavy sleet"],
-		[24, "Light snowfall"],
-		[25, "Moderate snowfall"],
-		[26, "Heavy snowfall"]
+		[1, "Clear sky"],
+		[2, "Nearly clear sky"],
+		[3, "Variable cloudiness"],
+		[4, "Halfclear sky"],
+		[5, "Cloudy sky"],
+		[6, "Overcast"],
+		[7, "Fog"],
+		[8, "Light rain showers"],
+		[9, "Moderate rain showers"],
+		[10, "Heavy rain showers"],
+		[11, "Thunderstorm"],
+		[12, "Light sleet showers"],
+		[13, "Moderate sleet showers"],
+		[14, "Heavy sleet showers"],
+		[15, "Light snow showers"],
+		[16, "Moderate snow showers"],
+		[17, "Heavy snow showers"],
+		[18, "Light rain"],
+		[19, "Moderate rain"],
+		[20, "Heavy rain"],
+		[21, "Thunder"],
+		[22, "Light sleet"],
+		[23, "Moderate sleet"],
+		[24, "Heavy sleet"],
+		[25, "Light snowfall"],
+		[26, "Moderate snowfall"],
+		[27, "Heavy snowfall"]
 	]);
 
 // Request data from SMHI
@@ -112,7 +115,7 @@ function displayData() { // TODO: better, non-repetitive code
 		time = forecast.timeSeries[day];
 		// After the 5th entry, the location of pcat in the array moves. We have to check by names, sigh.
 		for(i=0; i<time.parameters.length; i++) {
-			if(forecast.timeSeries[day].parameters[i].name == "pcat") {
+			if(time.parameters[i].name == "pcat") {
 				percipCond = time.parameters[i].values[0];
 
 				if(rainStatus(percipCond) && !foundFirstRain) {
@@ -123,10 +126,10 @@ function displayData() { // TODO: better, non-repetitive code
 					hoursRemainingSnow = day;
 					foundFirstSnow = true;
 				}
-				if(time.parameters[18].values[0] = 6 && !foundFirstFog) { // wsymb always 18, 6 = fog
+				/*if(time.parameters[18].values[0] == 6+1 && !foundFirstFog) { // wsymb always 18, 6 = fog
 					hoursRemainingFog = day;
 					foundFirstFog = true;
-				}
+				}*/
 			}
 		}
 	}
@@ -144,12 +147,12 @@ function displayData() { // TODO: better, non-repetitive code
 		}
 	} else { nextSnow = "No snow on the forecast!"; } // no snow found
 
-	if(foundFirstFog) {
+	/*if(foundFirstFog) {
 		if(hoursRemainingFog == 0) { nextFog = "It's foggy, be careful!"; } else {
 			nextFog = "It's going to be foggy next in " + hoursRemainingFog + " hours.";
 			nextFog += "<br>That's on " + formatDate(forecast.timeSeries[hoursRemainingFog].validTime) + ".";
 		}
-	} else { nextFog = "Clear days ahead."; } // no fog found
+	} else { nextFog = "Clear days ahead."; } // no fog found*/
 
 	listUpdate();
 }
@@ -161,9 +164,13 @@ function listUpdate() {
 	} else if($("#rain").is(':checked')) {
 		$("#statustext").html(nextRain);
 		return
-	} else if($("#fog").is(":checked")) {
+	/*} else if($("#fog").is(":checked")) {
 		$("#statustext").html(nextFog);
-		return
+		return*/
+	} else if($("#wsymb2").is(":checked")) {
+		$("#statustext").html(Wsymb2.get(forecast.timeSeries[0].parameters[18].values[0])
+			+ " & " + forecast.timeSeries[0].parameters[11].values[0] + "&#8451;");
+			// now, wsymb2; now, temp
 	} else {
 		$("#statustext").html("Invalid option selected.");
 	}
