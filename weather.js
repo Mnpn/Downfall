@@ -37,7 +37,7 @@ function percipStatus(statusInt) { // Format SMHI's options as text
 	switch(statusInt) {
 		case 0: return "be no percipitation";
 		case 1: return "snow";
-		case 2: return "snow & rain";
+		case 2: return "snow and rain";
 		case 3: return "rain";
 		case 4: return "drizzle";
 		case 5: return "be freezing rain";
@@ -68,7 +68,7 @@ function snowStatus(statusInt) {
 }
 
 // unsure if I want to use this over a switch in a func
-let Wsymb2 = new Map([ // TODO: definitions.js
+let Wsymb2 = new Map([
 		[1, "Clear sky"],
 		[2, "Nearly clear sky"],
 		[3, "Variable cloudiness"],
@@ -110,7 +110,7 @@ function getData(long, lat) {
 function displayData() { // TODO: better, non-repetitive code
 	let foundFirstRain, foundFirstSnow, foundFirstFog = false;
 	let hoursRemainingRain, hoursRemainingSnow, hoursRemainingFog = 0; // TODO: this doesn't really work. all updates are not hourly.
-	let percipCond = -1; // this can never occur with SMHI data
+	let percipCond, rainPercipCond = -1; // this can never occur with SMHI data
 	for(day in forecast.timeSeries) {
 		time = forecast.timeSeries[day];
 		// After the 5th entry, the location of pcat in the array moves. We have to check by names, sigh.
@@ -119,6 +119,7 @@ function displayData() { // TODO: better, non-repetitive code
 				percipCond = time.parameters[i].values[0];
 
 				if(rainStatus(percipCond) && !foundFirstRain) {
+					rainPercipCond = percipCond;
 					hoursRemainingRain = day;
 					foundFirstRain = true;
 				}
@@ -135,14 +136,16 @@ function displayData() { // TODO: better, non-repetitive code
 	}
 	if(foundFirstRain) {
 		if(hoursRemainingRain == 0) { nextRain = "It's raining, bring an umbrella!"; } else {
-			nextRain = "It's going to " + percipStatus(percipCond) + " next in " + hoursRemainingRain + " hours.";
+			nextRain = "It's going to " + percipStatus(rainPercipCond) + " in " + hoursRemainingRain;
+			if (hoursRemainingRain == 1) { nextRain += " hour." } else { nextRain += " hours." }
 			nextRain += "<br>That's on " + formatDate(forecast.timeSeries[hoursRemainingRain].validTime) + ".";
 		}
 	} else { nextRain = "Sunny days ahead."; } // no rain found
 
 	if(foundFirstSnow) {
 		if(hoursRemainingSnow == 0) { nextSnow = "It's snowing right now!"; } else {
-			nextSnow = "You'll see some snow in " + hoursRemainingSnow + " hours.";
+			nextSnow = "You'll see some snow in " + hoursRemainingSnow;
+			if (hoursRemainingSnow == 1) { nextSnow += " hour." } else { nextSnow += " hours." }
 			nextSnow += "<br>That's on " + formatDate(forecast.timeSeries[hoursRemainingSnow].validTime) + ".";
 		}
 	} else { nextSnow = "No snow on the forecast!"; } // no snow found
@@ -168,9 +171,16 @@ function listUpdate() {
 		$("#statustext").html(nextFog);
 		return*/
 	} else if($("#wsymb2").is(":checked")) {
-		$("#statustext").html(Wsymb2.get(forecast.timeSeries[0].parameters[18].values[0])
-			+ " & " + forecast.timeSeries[0].parameters[11].values[0] + "&#8451;");
-			// now, wsymb2; now, temp
+		let temp = "?"
+		time = forecast.timeSeries[0]
+		for(i=0; i<forecast.timeSeries[0].parameters.length; i++) {
+			if(time.parameters[i].name == "t") {
+				temp = time.parameters[i].values[0];
+			}
+		}
+		$("#statustext").html(Wsymb2.get(time.parameters[18].values[0])
+			+ " & " + temp + "°C");
+			// 18 = wsymb
 	} else {
 		$("#statustext").html("Invalid option selected.");
 	}
@@ -179,4 +189,17 @@ function listUpdate() {
 function formatDate(date) {
 	dateString = date.slice(0, -10) + " at " + date.slice(11, -4);
 	return dateString;
+}
+
+let dark = false;
+function darken() {
+	if(!dark) {
+		$("section").css("background", "#000");
+		$("#darken").html("Brighten");
+		dark = true;
+	} else {
+		$("section").css("background", "linear-gradient(180deg, #4fabf3 0%, #2170ad 100%)");
+		$("#darken").html("Darken");
+		dark = false;
+	}
 }
