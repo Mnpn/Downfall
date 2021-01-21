@@ -1,6 +1,6 @@
 let endpoint = "https://opendata-download-metfcst.smhi.se/api/category/pmp3g/version/2/geotype/point/lon/{lon}/lat/{lat}/data.json";
 let forecast = null;
-let nextRain, nextSnow, nextFog = "Weather data not yet fetched.";
+let nextRain, nextSnow = "Weather data not yet fetched.";
 
 // location code from google web fundamentals
 var locSuccess = function(position) {
@@ -42,19 +42,7 @@ function percipStatus(statusInt) { // Format SMHI's options as text
 		case 4: return "drizzle";
 		case 5: return "be freezing rain";
 		case 6: return "be freezing drizzle";
-		default: "Unknown";
-	}
-}
-
-function rainStatus(statusInt) {
-	switch(statusInt) {
-		case 2:
-		case 3:
-		case 4:
-		case 5:
-		case 6:
-			return true;
-		default: false;
+		default: return "Unknown";
 	}
 }
 
@@ -108,8 +96,8 @@ function getData(long, lat) {
 }
 
 function displayData() { // TODO: better, non-repetitive code
-	let foundFirstRain, foundFirstSnow, foundFirstFog = false;
-	let hoursRemainingRain, hoursRemainingSnow, hoursRemainingFog = 0; // TODO: this doesn't really work. all updates are not hourly.
+	let foundFirstRain, foundFirstSnow = false;
+	let hoursRemainingRain, hoursRemainingSnow = 0; // TODO: this doesn't really work. all updates are not hourly.
 	let percipCond, rainPercipCond = -1; // this can never occur with SMHI data
 	for(day in forecast.timeSeries) {
 		time = forecast.timeSeries[day];
@@ -118,7 +106,7 @@ function displayData() { // TODO: better, non-repetitive code
 			if(time.parameters[i].name == "pcat") {
 				percipCond = time.parameters[i].values[0];
 
-				if(rainStatus(percipCond) && !foundFirstRain) {
+				if((2 <= percipCond <= 6) && !foundFirstRain) { // if the status is 2 -> 6 and rain not yet found
 					rainPercipCond = percipCond;
 					hoursRemainingRain = day;
 					foundFirstRain = true;
@@ -127,10 +115,6 @@ function displayData() { // TODO: better, non-repetitive code
 					hoursRemainingSnow = day;
 					foundFirstSnow = true;
 				}
-				/*if(time.parameters[18].values[0] == 6+1 && !foundFirstFog) { // wsymb always 18, 6 = fog
-					hoursRemainingFog = day;
-					foundFirstFog = true;
-				}*/
 			}
 		}
 	}
@@ -150,13 +134,6 @@ function displayData() { // TODO: better, non-repetitive code
 		}
 	} else { nextSnow = "No snow on the forecast!"; } // no snow found
 
-	/*if(foundFirstFog) {
-		if(hoursRemainingFog == 0) { nextFog = "It's foggy, be careful!"; } else {
-			nextFog = "It's going to be foggy next in " + hoursRemainingFog + " hours.";
-			nextFog += "<br>That's on " + formatDate(forecast.timeSeries[hoursRemainingFog].validTime) + ".";
-		}
-	} else { nextFog = "Clear days ahead."; } // no fog found*/
-
 	listUpdate();
 }
 
@@ -167,9 +144,6 @@ function listUpdate() {
 	} else if($("#rain").is(':checked')) {
 		$("#statustext").html(nextRain);
 		return
-	/*} else if($("#fog").is(":checked")) {
-		$("#statustext").html(nextFog);
-		return*/
 	} else if($("#wsymb2").is(":checked")) {
 		let temp = "?"
 		time = forecast.timeSeries[0]
